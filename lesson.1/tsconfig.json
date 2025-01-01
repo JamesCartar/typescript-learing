@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"target": "ES6", // Use ES6 for browser compatibility
+		"module": "ESNext", // Use ES Modules syntax
+		"moduleResolution": "node", // Resolve modules like Node.js
+		"outDir": "./dist", // Output directory for compiled files
+		"strict": true, // Enable strict type checking
+		"esModuleInterop": true, // Ensure compatibility with CommonJS modules
+		"skipLibCheck": true, // Optional: skips type checking for declaration files
+		"allowJs": false // Optional: allow JavaScript files to be compiled
+	},
+	"include": [
+		"*.ts"
+	] /* Specify an array of 'glob' patterns that match files to be included in compilation. */
+}

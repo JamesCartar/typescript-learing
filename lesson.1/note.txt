@@ -1,0 +1,30 @@
+
+there are two syntaxes for building types: Interfaces and Types. You should prefer interface. Use type when you need specific features.
+
+With TypeScript, you can create complex types by combining simple ones. There are two popular ways to do so: unions and generics.
+
+Unions
+With a union, you can declare that a type could be one of many types. For example, type WindowStates = "open" | "closed" | "minimized";
+
+Generics
+Generics provide variables to types. A common example is an array. An array without generics could contain anything. An array with generics can describe the values that the array contains. For example: type StringArray = Array<string>; or You can declare your own types that use generics:
+
+interface Backpack<Type> {
+  add: (obj: Type) => void;
+  get: () => Type;
+}
+ 
+// This line is a shortcut to tell TypeScript there is a
+// constant called `backpack`, and to not worry about where it came from.
+declare const backpack: Backpack<string>;
+ 
+// object is a string, because we declared it above as the variable part of Backpack.
+const object = backpack.get();
+ 
+// Since the backpack variable is a string, you can't pass a number to the add function.
+backpack.add(23);
+Argument of type 'number' is not assignable to parameter of type 'string'.
+
+Structural Type System
+TypeScript uses a structural type system, which is also known as duck typing. This means In TypeScript, if an object has the same properties and methods as a required type, it is considered compatible with that type, regardless of whether it explicitly declares the type or extends it.
+note: ( The structural typing system in TypeScript allows for flexible and more intuitive type compatibility, particularly in cases where objects share similar shapes. By focusing on the structure, TypeScript offers a more lightweight way to ensure type safety, especially when working with dynamic data or third-party libraries that don't have formal type declarations. )
