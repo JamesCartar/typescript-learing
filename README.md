@@ -393,3 +393,276 @@ type CallOrConstruct = {
 	new (s: string): Date;
 };
 ```
+
+**Generic Function**
+
+It's common to write a function where the type of the input relate to type of the output, or where the types of two inputs are related in some way.
+
+```typescript
+function firstElement<Type>(arr: Type[]): Type | undefined {
+	return arr[0];
+}
+
+function map<Input, Output>(
+	arr: Input[],
+	func: (arg: Input) => Output
+): Output[] {
+	return arr.map(func);
+}
+
+const parsed = map(["1", "2", "3", "4"], (n) => parseInt(n));
+
+function longest<Type extends { length: number }>(a: Type, b: Type): Type {
+	if (a.length >= b.length) {
+		return a;
+	} else {
+		return b;
+	}
+}
+
+const longerArray = longest([1, 2, 3, 4], [1, 2]);
+const longerString = longest("abcdef", "abc");
+const longerNumber = longest(1234, 25);
+// Argument of type 'number' is not assignable to parameter of type '{ length: number; }'.
+```
+
+**Function Overloads**
+
+Some javascript function can be called in a variety of argument counts and types. Function overloads allow us to define multiple ways to call a function with different argument combinations while ensuring type safety.
+
+-   **Two type of signature**
+
+    1.  Overload Signature, and
+    2.  Implementation Signature
+
+        ```typescript
+        function makeDate(timestamp: number): Date; // overload signature
+        function makeDate(m: number, d: number, y: number): Date; // overload signature
+        function makeDate(mOrTimeStamp: number, d?: number, y?: number): Date {
+        	// implementation signature
+        	if (d !== undefined && y !== undefined) {
+        		return new Date(y, m, d);
+        	} else {
+        		return new Date(mOrTimeStamp);
+        	}
+        }
+
+        makeDate(123456);
+        makeDate(5, 5, 5);
+        makeDate(2, 3); // No overload expects 2 arguments, but overloads do exist that expect either 1 or 3 arguments.
+        ```
+
+**Declaring `this` in Function**
+
+-   **Simple Example**
+
+    ```typescript
+    const user = {
+    	id: 123,
+    	admin: false,
+    	becomeAdmin() {
+    		this.admin = true;
+    	}
+    };
+    ```
+
+-   **Complex Example**
+
+    ```typescript
+    interface User {
+    	id: number;
+    	admin: boolean;
+    }
+
+    interface DB {
+    	filterUsers(filter: (this: User) => boolean): User[];
+    }
+    declare const getDB: () => DB;
+
+    const db = getDB();
+
+    db.filterUsers(function (this: User) {
+    	return this.admin;
+    });
+    ```
+
+**Other types to know about**
+
+1. `void`
+
+    void represent the return value of function which don't return a value. Sometime, function with `void` return type can also return `undefined`.
+
+    ```typescript
+    function noop(): void {
+    	// do nothing
+    }
+    ```
+
+2. `object`
+
+    The special type `object` refers to any value that isn't a primitive which includes `array`, `object`, `function` and excludes `null` and `undefined`.
+
+    ```typescript
+    const user: object = {
+    	id: 123,
+    	name: "testing"
+    };
+
+    function handleObject(obj: object): void {
+    	console.log(obj);
+    }
+
+    handleObject([1, 2, 3]);
+    handleObject({ a: 1, b: "2" });
+    handleObject(null); // Error
+    ```
+
+3. `unknown`
+
+    unknown type represents any value which is similar to `any` but is safer because it's not legal to do anything with the `unknown` value. We cannot perform operations on `unknown` without narrowing its type first, ensuring runtime safety.
+
+    ```typescript
+    function f1(a: any) {
+    	a.b();
+    }
+
+    function f2(a: unknown) {
+    	a.b();
+    } // Error: a is of type `unknown`
+
+    function foo(arg: unknown): void {
+    	if (typeof arg === "string") {
+    		arg.toString();
+    	}
+    	arg.toString(); // Error: arg is of type `unknown`
+    }
+    ```
+
+4. `never`
+
+    Some function `never` return a value. The `never` type represents values which are never observed. In a _return_ type, this means that the function throws **an exception** or **terminates execution of the program**. `never` also appears when TypeScript determines there's nothing left in a `union`.
+
+    ```typescript
+    function throwException(): never {
+    	throw new Error("Something went wrong");
+    }
+
+    function fn(x: string | number) {
+    	if(typeof x === "string") {
+    		// do something
+    	} else if (typeof x === "number") {
+    		// do something else
+    	} else {
+    		x: // has type `never`!
+    	}
+    }
+    ```
+
+5. `Function`
+
+    The global type `Function` describes properties like `bind`, `call`, `apply` and others present on all function values in JavaScript. I also has the special property that values of type `Function` can always be called and these calls return `any`.
+
+    ```typescript
+    function doSomething(f: Function) {
+    	return f(1, 2, 3);
+    }
+    ```
+
+**Rest Parameters And Arguments**
+
+1. **Rest Parameters**
+
+    Rest Parameter collect multiple arguments into an array.
+
+    ```typescript
+    function sum(...numbers: number[]): number {
+    	return sum.reduce((a, b) => a + b, 0);
+    }
+
+    function concat(...strings: Array<string>): string {
+    	return strings.join(" ");
+    }
+
+    function makeTuple(num: number, ...rest: [boolean, number]) {
+    	return [num, ...rest];
+    }
+    ```
+
+2. Rest Arguments
+
+    Rest arguments(`Spread Syntax`) expands an array of individual arguments. When using spread, the argument must either be a `tuple` (with specific types and length) or be passed to a `rest parameter`.
+
+    ```typescript
+    const arr1 = [1, 2, 3];
+    const arr2 = [4, 5, 6];
+    arr1.push(...arr2);
+
+    const args = [8, 5];
+    const angle = Math.atan2(...args);
+    // A spread argument must either have a tuple type or be passed to a rest parameter.
+    // Two ways to fixes this:
+    // 1. const args = [8, 5] as const;
+    // 2. const args: [number, number] = [8, 5];
+    ```
+
+**Parameter Destructuring**
+
+Use parameter destructuring to conveniently unpack objects provided as an argument into one or more local variables in the function body.
+
+```typescript
+function sum({ a, b, c }: { a: number; b: number; c: number }) {
+	console.log(a + b + c);
+}
+// Using name type
+type ABC = { a: number; b: number; c: number };
+
+function sum({ a, b, c }: ABC) {
+	console.log(a + b + c);
+}
+```
+
+**Assignability of Functions**
+
+-   **Return type `void`**
+
+    Contextual typing with a return type of `void` does not force functions to _not_ return something. Which means a contextual function with with a `void` type (type voidFunc = () => void), when implemented, can return _any_ other value, but it will be ignored.
+
+    ```typescript
+    // Valid implementation
+    type voidFunc = () => void;
+
+    const f1: voidFunc = () => {
+    	return true;
+    }
+
+    const f2: voidFunc = () => true;
+
+    const f3: voidFunc = function() {
+    	return true;
+    }
+
+    // In-valid implementation
+    function f1(): void {
+    	return true;
+    	// @ts-expect-error
+    }
+
+    function f2 = function(): void {
+    	// @ts-expect-error
+    	return true;
+    }
+    ```
+
+**List of Function Signatures**
+
+1. **Call Signature:** Defines the arguments and return type of a function.
+
+2. Construct Signature: Defines the signature for a constructor function (used with new).
+
+3. **Overload Signature:** Defines multiple possible signatures for a function.
+
+4. **Implementation Signature:** The actual implementation of a function that adheres to one of the overload or call signatures.
+
+5. **Function Signature:** A general term for a function's signature (could be a call or method signature).
+
+6. **Method Signature:** A call signature for methods within an object or class.
